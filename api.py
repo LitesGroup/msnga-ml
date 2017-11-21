@@ -38,13 +38,18 @@ class Enrich(object):
             raise falcon.HTTPError(falcon.HTTP_400,
                                    'Error',
                                    ex.message)
+        out = {}
+        if len(textacy.keyterms.textrank(ip)) > 0:
+            out["textrank"] = [x[0] for x in textacy.keyterms.textrank(ip)]
+        if len(textacy.keyterms.singlerank(ip)) > 0:
+            out["singlerank"] = [x for x in textacy.keyterms.singlerank(ip)]
+        if textacy.extract.subject_verb_object_triples(ip):
+            out["svo"] = [str(x[0]) for x in textacy.extract.subject_verb_object_triples(ip)]
+        if textacy.extract.ngrams(ip, 2):
+            out["bigrams"] = [str(x) for x in textacy.extract.ngrams(ip, 2)]
+
         resp.status = falcon.HTTP_200
-        resp.media = {
-                     "textrank": [x[0] for x in textacy.keyterms.textrank(ip)],
-                     "singlerank": [x for x in textacy.keyterms.singlerank(ip)],
-                     "svo": [str(x[0]) for x in textacy.extract.subject_verb_object_triples(ip)],
-                     "bigrams": [str(x) for x in textacy.extract.ngrams(ip, 2)]
-                     }
+        resp.media = out
 
 api = falcon.API()
 api.add_route('/parse', NLP())
